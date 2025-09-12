@@ -35,6 +35,7 @@ class TurmaController extends Controller
             'turma' => $turma,
             'materias' => Materia::all(),
             'avaliacoesDaTurma' => $avaliacoesDaTurma,
+            'periodos' => DB::table('periodos')->get(), // Adiciona os períodos aqui
         ]);
     }
 

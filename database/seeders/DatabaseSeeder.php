@@ -23,5 +23,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MateriaSeeder::class,
         ]);
+
+        $this->call([
+            PeriodoSeeder::class,
+        ]);
     }
 }

@@ -23,6 +23,23 @@ services:
             - sail
         depends_on:
             - pgsql
+    ia_service:
+        container_name: ia_service
+        build:
+            context: ./ia_service # Caminho para o diretório que contém o Dockerfile
+        
+        environment:
+            DB_USER: '${DB_USERNAME}'
+            DB_PASSWORD: '${DB_PASSWORD}'
+            DB_HOST: 'pgsql'
+            DB_PORT: '5432'   
+            DB_NAME: '${DB_DATABASE}'
+        ports:
+            - "8001:8000" # Mapeia a porta 8000 do contêiner para a 8001 da sua máquina
+        networks:
+            - sail
+        depends_on:
+            - pgsql
     pgsql:
         image: 'postgres:17-alpine'
         ports:

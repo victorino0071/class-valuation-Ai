@@ -3,41 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Avaliacao;
-use App\Models\Materia;
+use App\Models\Periodo;
 use App\Models\Turma;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class AvaliacaoController extends Controller
 {
-    /**
-     * Exibe uma lista de todas as avaliações.
-     */
-    public function index(): Response
-    {
-        // Carrega as avaliações com seus respectivos relacionamentos para evitar o problema N+1
-        $avaliacoes = Avaliacao::with(['aluno', 'materia', 'turma'])->latest()->get();
-
-        return Inertia::render('Avaliacoes/Index', [
-            'avaliacoes' => $avaliacoes,
-        ]);
-    }
-
-    /**
-     * Mostra o formulário para criar um novo conjunto de avaliações para uma turma.
-     * A Turma é recebida via route-model binding.
-     */
-    public function create(Turma $turma): Response
-    {
-        // Para o formulário, precisamos da turma e de uma lista de matérias disponíveis.
-        return Inertia::render('Avaliacoes/Create', [
-            'turma' => $turma,
-            'materias' => Materia::all(),
-        ]);
-    }
-
     /**
      * Armazena um novo conjunto de avaliações no banco de dados.
      * Cria uma avaliação para cada aluno da turma especificada.
@@ -46,52 +18,45 @@ class AvaliacaoController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validação dos dados recebidos do formulário
+        // 1. Validação CORRIGIDA: removemos a exigência do 'periodo_id'
         $dadosValidados = $request->validate([
             'turma_id' => 'required|exists:turmas,id',
             'materia_id' => 'required|exists:materias,id',
             'data_avaliacao' => 'required|date',
+            // 'periodo_id' => 'required|exists:periodos,id', // REMOVIDO
         ]);
 
-        // 2. Busca a turma e seus alunos
+        $dataAvaliacao = $dadosValidados['data_avaliacao'];
+        $periodo = Periodo::where('data_inicio', '<=', $dataAvaliacao)
+            ->where('data_fim', '>=', $dataAvaliacao)
+            ->first();
+
+        if (! $periodo) {
+            return back()->with('error', 'Não foi encontrado um período cadastrado para a data selecionada.');
+        }
+
         $turma = Turma::with('alunos')->findOrFail($dadosValidados['turma_id']);
 
         if ($turma->alunos->isEmpty()) {
             return back()->with('error', 'Esta turma não possui alunos cadastrados.');
         }
 
-        // 3. Usa uma transação para garantir a integridade dos dados
-        // Se uma inserção falhar, todas serão revertidas.
-        DB::transaction(function () use ($turma, $dadosValidados) {
-            // 4. Itera sobre cada aluno da turma
+        // 2. Transação CORRIGIDA: adicionamos a variável '$periodo' ao 'use'
+        DB::transaction(function () use ($turma, $dadosValidados, $periodo) { // CORRIGIDO
             foreach ($turma->alunos as $aluno) {
-                // 5. Cria uma avaliação para o aluno
                 Avaliacao::create([
                     'aluno_id' => $aluno->id,
                     'turma_id' => $dadosValidados['turma_id'],
                     'materia_id' => $dadosValidados['materia_id'],
                     'data_avaliacao' => $dadosValidados['data_avaliacao'],
+                    'periodo_id' => $periodo->id, // Agora a variável $periodo existe aqui
                     'nota' => 0,
                 ]);
             }
         });
 
-        // 6. Redireciona de volta para a página da turma com uma mensagem de sucesso
         return redirect()->route('turmas.show', $dadosValidados['turma_id'])
             ->with('success', 'Avaliações criadas com sucesso para todos os alunos da turma!');
-    }
-
-    /**
-     * Mostra o formulário para editar uma avaliação específica.
-     */
-    public function edit(Avaliacao $avaliacao): Response
-    {
-        // Carrega os relacionamentos para exibir mais detalhes na página de edição
-        $avaliacao->load(['aluno', 'materia', 'turma']);
-
-        return Inertia::render('Avaliacoes/Edit', [
-            'avaliacao' => $avaliacao,
-        ]);
     }
 
     /**

@@ -1,37 +1,36 @@
 // pages/Turmas/Show.tsx (COMPLETO E CORRIGIDO)
 
-import { Head, Link, usePage, useForm, router } from '@inertiajs/react';
-import { route } from 'ziggy-js';
-import { PageProps, Turma, Aluno, Materia, AvaliacaoEvento } from '@/types';
-import TurmaLayout from '@/layouts/turma-layout';
-import { useState } from 'react';
 import AlunoFormModal from '@/components/aluno-form-modal';
 import AvaliacaoFormModal from '@/components/AvaliacaoFormModal';
 import DataTable, { ColumnDef } from '@/components/data-table';
-import { Button } from '@/components/ui/button'; // É uma boa prática usar o componente Button
 import DeleteAvaliacaoModal from '@/components/DeleteAvaliacaoModal';
+import { Button } from '@/components/ui/button'; // É uma boa prática usar o componente Button
+import TurmaLayout from '@/layouts/turma-layout';
+import { Aluno, AvaliacaoEvento, Materia, PageProps, periodo, Turma } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import { route } from 'ziggy-js';
 
 interface ShowPageProps extends PageProps {
     turma: Turma & { alunos: Aluno[] };
     materias: Materia[];
     avaliacoesDaTurma: AvaliacaoEvento[];
+    periodos: periodo[];
 }
 
 export default function Show() {
     const { turma, materias, avaliacoesDaTurma } = usePage<ShowPageProps>().props;
     const { delete: destroy, processing } = useForm();
-    
+
     const [isAlunoModalOpen, setIsAlunoModalOpen] = useState(false);
     const [isAvaliacaoModalOpen, setIsAvaliacaoModalOpen] = useState(false);
     const [alunoToEdit, setAlunoToEdit] = useState<Aluno | null>(null);
 
-
     const [isDeleteAvaliacaoModalOpen, setIsDeleteAvaliacaoModalOpen] = useState(false);
-
 
     const columns: ColumnDef<Aluno>[] = [
         { header: 'Nome do Aluno', accessorKey: 'nome' },
-        { header: 'Email', accessorKey: 'email' }
+        { header: 'Email', accessorKey: 'email' },
     ];
 
     const deleteAluno = (id: string | number) => {
@@ -39,12 +38,12 @@ export default function Show() {
             destroy(route('alunos.destroy', id), { preserveScroll: true });
         }
     };
-    
+
     const handleOpenCreateAlunoModal = () => {
         setAlunoToEdit(null);
         setIsAlunoModalOpen(true);
     };
-    
+
     const handleOpenEditAlunoModal = (aluno: Aluno) => {
         setAlunoToEdit(aluno);
         setIsAlunoModalOpen(true);
@@ -59,12 +58,12 @@ export default function Show() {
         <TurmaLayout>
             <Head title={`Detalhes da Turma: ${turma.nome}`} />
 
-            <div className="sm:flex sm:items-center mb-6">
+            <div className="mb-6 sm:flex sm:items-center">
                 <div className="sm:flex-auto">
                     <h1 className="text-xl font-semibold text-foreground">Turma: {turma.nome}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">Lista de todos os alunos cadastrados nesta turma.</p>
                 </div>
-                <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-2">
+                <div className="mt-4 space-x-2 sm:mt-0 sm:ml-16 sm:flex-none">
                     {/* A melhor forma é usar o componente Button e o atributo 'asChild' para links */}
                     <Button variant="outline" asChild>
                         <Link href={route('turmas.index')}>Voltar</Link>
@@ -75,9 +74,7 @@ export default function Show() {
                     <Button variant="outline" onClick={() => setIsAvaliacaoModalOpen(true)}>
                         Criar Avaliação
                     </Button>
-                    <Button onClick={handleOpenCreateAlunoModal}>
-                        Novo Aluno
-                    </Button>
+                    <Button onClick={handleOpenCreateAlunoModal}>Novo Aluno</Button>
                 </div>
             </div>
 
@@ -91,19 +88,9 @@ export default function Show() {
                 emptyStateMessage="Nenhum aluno cadastrado nesta turma."
             />
 
-            <AlunoFormModal 
-                isOpen={isAlunoModalOpen}
-                onClose={handleCloseAlunoModal}
-                aluno={alunoToEdit}
-                turmaId={turma.id}
-            />
+            <AlunoFormModal isOpen={isAlunoModalOpen} onClose={handleCloseAlunoModal} aluno={alunoToEdit} turmaId={turma.id} />
 
-            <AvaliacaoFormModal
-                isOpen={isAvaliacaoModalOpen}
-                onClose={() => setIsAvaliacaoModalOpen(false)}
-                turmaId={turma.id}
-                materias={materias}
-            />
+            <AvaliacaoFormModal isOpen={isAvaliacaoModalOpen} onClose={() => setIsAvaliacaoModalOpen(false)} turmaId={turma.id} materias={materias} />
 
             <DeleteAvaliacaoModal
                 isOpen={isDeleteAvaliacaoModalOpen}

@@ -21,17 +21,6 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Exibe o formulário de criação de relatório.
-     */
-    public function create()
-    {
-        // 3. Envie a lista de alunos para o formulário
-        return Inertia::render('Relatorios/Create', [
-            'alunos' => Aluno::all(),
-        ]);
-    }
-
-    /**
      * Salva um novo relatório no banco de dados.
      */
     public function store(Request $request)
@@ -40,24 +29,12 @@ class RelatorioController extends Controller
         $validador = $request->validate([
             'aluno_id' => 'required|exists:alunos,id',
             'texto' => 'required|string',
-            'bimestre' => 'required|integer|in:1,2,3,4',
+            'periodo_id' => 'required|exists:periodos,id',
         ]);
 
         Relatorio::create($validador);
 
         return back()->with('success', 'Relatório criado com sucesso!');
-    }
-
-    /**
-     * Exibe o formulário de edição do relatório.
-     */
-    public function edit(Relatorio $relatorio)
-    {
-        // 5. Envie o relatório e a lista de alunos para a edição
-        return Inertia::render('Relatorios/Edit', [
-            'relatorio' => $relatorio,
-            'alunos' => Aluno::all(),
-        ]);
     }
 
     /**
@@ -68,7 +45,7 @@ class RelatorioController extends Controller
         $validador = $request->validate([
             'aluno_id' => 'required|exists:alunos,id',
             'texto' => 'required|string',
-            'bimestre' => 'required|integer|in:1,2,3,4',
+            'periodo_id' => 'required|exists:periodos,id',
         ]);
 
         $relatorio->update($validador);

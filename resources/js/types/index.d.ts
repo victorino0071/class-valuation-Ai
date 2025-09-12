@@ -86,10 +86,19 @@ export interface Materia {
     updated_at: string;
 }
 
+export interface periodo{
+    id: number;
+    nome: string;
+    data_inicio: string;
+    data_fim: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Relatorio {
     id: number;
-    bimestre: number;
     texto: string;
+    periodo_id: number;
     aluno_id: number;
     created_at: string;
     updated_at: string;

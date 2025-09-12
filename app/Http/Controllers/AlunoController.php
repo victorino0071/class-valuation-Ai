@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aluno;
+use App\Models\Periodo;
 use App\Models\Turma;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,6 +25,7 @@ class AlunoController extends Controller
     {
         return Inertia::render('Alunos/Show', [
             'aluno' => $aluno->load('turma', 'relatorios', 'avaliacoes.materia'),
+            'periodos' => Periodo::all(), // Passa os períodos para a view
         ]);
     }
 
