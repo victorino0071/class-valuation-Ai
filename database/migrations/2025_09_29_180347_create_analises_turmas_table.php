@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('turmas', function (Blueprint $table) {
+        Schema::create('analises_turmas', function (Blueprint $table) {
             $table->id();
-            $table->string('nome');
+            $table->json('dados_analise_json'); // O tipo 'json' é otimizado para isso!
+            $table->json('dados_originais')->nullable();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('turmas');
+        Schema::dropIfExists('analises_turmas');
     }
 };

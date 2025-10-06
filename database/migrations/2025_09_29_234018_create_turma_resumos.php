@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('turmas', function (Blueprint $table) {
+        Schema::create('turma_resumos', function (Blueprint $table) {
             $table->id();
-            $table->string('nome');
+            $table->json('dados_analise_json'); // O tipo 'json' é otimizado para isso!
+            $table->json('dados_originais')->nullable();
+            $table->foreignId('periodo_id')->constrained('periodos')->onDelete('cascade');
+            $table->foreignId('turma_id')->constrained('turmas')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->unique(['turma_id', 'periodo_id']);
             $table->timestamps();
         });
     }
@@ -24,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('turmas');
+        Schema::dropIfExists('analise_turma');
     }
 };

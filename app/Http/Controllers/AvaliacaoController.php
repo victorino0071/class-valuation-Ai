@@ -7,6 +7,7 @@ use App\Models\Periodo;
 use App\Models\Turma;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class AvaliacaoController extends Controller
 {
@@ -16,6 +17,17 @@ class AvaliacaoController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
+    public function index()
+    {
+        $avaliacoes = Avaliacao::with(['aluno', 'materia', 'turma'])
+            ->latest('data_avaliacao') // Ordena pela data mais recente primeiro
+            ->get();
+
+        return Inertia::render('Avaliacoes/Index', [
+            'avaliacoes' => $avaliacoes,
+        ]);
+    }
+
     public function store(Request $request)
     {
         // 1. Validação CORRIGIDA: removemos a exigência do 'periodo_id'

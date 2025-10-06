@@ -1,63 +1,68 @@
-# ia_service/main.py
-
 import os
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
-# --- CONFIGURAÇÃO DO BANCO DE DADOS ---
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(DATABASE_URL)
+load_dotenv();
 
-# --- APLICAÇÃO FASTAPI ---
-app = FastAPI(title="Serviço de IA para Análise de Alunos")
+app = FastAPI(title="IA Service API", version="1.0");
 
-@app.get("/healthcheck", tags=["Healthcheck"])
-def read_healthcheck():
-    return {"status": "ok"}
+DB_USER = os.getenv("DB_USER", "sail");
+DB_PASSWORD = os.getenv("DB_PASSWORD", "sail");
+DB_HOST = os.getenv("DB_HOST", "pgsql");
+DB_PORT = os.getenv("DB_PORT", "5432");
+DB_NAME = os.getenv("DB_NAME", "laravel");
 
-# --- LÓGICA DE EXTRAÇÃO DE DADOS ---
-@app.get("/carregar_dados_periodo/{aluno_id}/{periodo_id}", tags=["Dados"])
-def carregar_dados_periodo(aluno_id: int, periodo_id: int) -> dict:
-    
-    query_relatorio = text("SELECT * FROM relatorios WHERE aluno_id = :aluno_id AND periodo_id = :periodo_id")
-    
-    # CORREÇÃO: Tabela 'avaliacoes' e coluna 'aluno_id'
-    query_avaliacoes = text("SELECT * FROM avaliacoes WHERE aluno_id = :aluno_id AND periodo_id = :periodo_id ORDER BY created_at ASC")
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}";
+
+try:
+    engine = create_engine(DATABASE_URL);
+    print("Database connection established.");
+except Exception as e:
+    print(f"Error connecting to the database: {e}");
+    engine = None;
+
+class TurmasRequest(BaseModel):
+    limit: int = 5
+
+@app.get("/")
+def root():
+    return {"status": "ia_service running", "database_connected": engine is not None}
+
+
+@app.post("/turmas-com-alunos/")
+def get_turmas_com_alunos(request: TurmasRequest):
+    if engine is None:
+        raise HTTPException(status_code=503, detail="Database connection not established")
+
+    query_turmas = text('SELECT * FROM "turmas" LIMIT :limit')
 
     try:
         with engine.connect() as connection:
-            df_relatorio = pd.read_sql(query_relatorio, connection, params={'aluno_id': aluno_id, 'periodo_id': periodo_id})
-            df_avaliacoes = pd.read_sql(query_avaliacoes, connection, params={'aluno_id': aluno_id, 'periodo_id': periodo_id})
-        print("✅ Dados carregados com sucesso!")
-        
-        # --- 👇 MUDANÇA AQUI 👇 ---
-        # Converte os DataFrames para uma lista de dicionários, um formato JSON muito melhor.
+            turmas_df = pd.read_sql(query_turmas, connection, params={"limit": request.limit})
+            turmas_lista = turmas_df.to_dict(orient="records")
+
+            # DOCUMENTAÇÃO: A query foi simplificada para uma relação One-to-Many.
+            # Agora, buscamos na tabela "alunos" onde a coluna "turma_id"
+            # é igual ao ID da turma que estamos processando. Não há mais JOIN.
+            query_alunos = text("""
+                SELECT id, nome
+                FROM "alunos" 
+                WHERE turma_id = :turma_id
+            """)
+
+            for turma in turmas_lista:
+                # A lógica para executar a query continua a mesma
+                alunos_df = pd.read_sql(query_alunos, connection, params={"turma_id": turma['id']})
+                turma['alunos'] = alunos_df.to_dict(orient="records")
+
         return {
-            'relatorio': df_relatorio.to_dict(orient='records'),
-            'avaliacoes': df_avaliacoes.to_dict(orient='records')
+            "message": "Dados de turmas e seus alunos extraídos com sucesso!",
+            "data": turmas_lista
         }
-        
     except Exception as e:
-        print(f"❌ Erro ao conectar ou buscar dados: {e}")
-        # Retorna listas vazias em caso de erro.
-        return {'relatorio': [], 'avaliacoes': []}
-
-# --- BLOCO DE TESTE ---
-if __name__ == "__main__":
-    print("--- Iniciando teste de carga de dados ---")
-    # Para o teste funcionar, certifique-se que existem dados no seu BD
-    # para um user com id=1 e um período com id=1.
-    dados = carregar_dados_periodo(aluno_id=1, periodo_id=1)
-
-    print("\n[Relatório Carregado]")
-    print(dados['relatorio'].head() if not dados['relatorio'].empty else "Nenhum relatório encontrado.")
-
-    print("\n[Avaliações Carregadas]")
-    print(dados['avaliacoes'].head() if not dados['avaliacoes'].empty else "Nenhuma avaliação encontrada.")
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar dados: {str(e)}")
+     

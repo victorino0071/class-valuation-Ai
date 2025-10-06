@@ -1,37 +1,45 @@
-// pages/Turmas/Show.tsx (COMPLETO E CORRIGIDO)
+// resources/js/Pages/Turmas/Show.tsx
 
 import AlunoFormModal from '@/components/aluno-form-modal';
 import AvaliacaoFormModal from '@/components/AvaliacaoFormModal';
+import DashboardTurmaEspecifica from '@/components/DashboardTurmaEspecifica';
 import DataTable, { ColumnDef } from '@/components/data-table';
 import DeleteAvaliacaoModal from '@/components/DeleteAvaliacaoModal';
-import { Button } from '@/components/ui/button'; // É uma boa prática usar o componente Button
+import { FilePlus2, Trash2 } from 'lucide-react';
+// <-- NOVOS IMPORTS -->
+import PageHeader from '@/components/shared/PageHeader';
+import PageHeaderActions from '@/components/shared/PageHeaderActions';
 import TurmaLayout from '@/layouts/turma-layout';
-import { Aluno, AvaliacaoEvento, Materia, PageProps, periodo, Turma } from '@/types';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Aluno, AnaliseTurma, AvaliacaoEvento, Materia, PageProps, Periodo, Turma } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { route } from 'ziggy-js';
 
+// <-- ATUALIZADO: Interface agora espera o ID do período ativo
 interface ShowPageProps extends PageProps {
     turma: Turma & { alunos: Aluno[] };
     materias: Materia[];
     avaliacoesDaTurma: AvaliacaoEvento[];
-    periodos: periodo[];
+    periodos: Periodo[];
+    analise_turma: AnaliseTurma | null;
+    error_analise?: string;
+    ia_success?: string;
+    active_periodo_id?: number; // <-- ATUALIZADO
 }
 
 export default function Show() {
-    const { turma, materias, avaliacoesDaTurma } = usePage<ShowPageProps>().props;
+    // <-- ATUALIZADO: Extrai a nova propriedade
+    const { turma, materias, avaliacoesDaTurma, periodos, analise_turma, error_analise, ia_success, active_periodo_id } =
+        usePage<ShowPageProps>().props;
     const { delete: destroy, processing } = useForm();
 
     const [isAlunoModalOpen, setIsAlunoModalOpen] = useState(false);
     const [isAvaliacaoModalOpen, setIsAvaliacaoModalOpen] = useState(false);
     const [alunoToEdit, setAlunoToEdit] = useState<Aluno | null>(null);
-
     const [isDeleteAvaliacaoModalOpen, setIsDeleteAvaliacaoModalOpen] = useState(false);
+    const [isDashboardVisible, setIsDashboardVisible] = useState(true);
 
-    const columns: ColumnDef<Aluno>[] = [
-        { header: 'Nome do Aluno', accessorKey: 'nome' },
-        { header: 'Email', accessorKey: 'email' },
-    ];
+    const columns: ColumnDef<Aluno>[] = [{ header: 'Nome do Aluno', accessorKey: 'nome' }];
 
     const deleteAluno = (id: string | number) => {
         if (confirm('Tem certeza que deseja remover este aluno?')) {
@@ -58,25 +66,34 @@ export default function Show() {
         <TurmaLayout>
             <Head title={`Detalhes da Turma: ${turma.nome}`} />
 
-            <div className="mb-6 sm:flex sm:items-center">
-                <div className="sm:flex-auto">
-                    <h1 className="text-xl font-semibold text-foreground">Turma: {turma.nome}</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">Lista de todos os alunos cadastrados nesta turma.</p>
+            <PageHeader title={`Turma: ${turma.nome}`} description="Gerencie os alunos, avaliações e veja a análise de desempenho da turma.">
+                <PageHeaderActions
+                    primaryActionLabel="Novo Aluno"
+                    onPrimaryActionClick={handleOpenCreateAlunoModal}
+                    onBackClick={() => window.history.back()}
+                    isDashboardVisible={isDashboardVisible}
+                    onToggleDashboard={() => setIsDashboardVisible(!isDashboardVisible)}
+                    dropdownActions={[
+                        { label: 'Criar Avaliação', icon: FilePlus2, onClick: () => setIsAvaliacaoModalOpen(true) },
+                        { label: 'Deletar Avaliação', icon: Trash2, onClick: () => setIsDeleteAvaliacaoModalOpen(true), isDestructive: true },
+                    ]}
+                />
+            </PageHeader>
+
+            {ia_success && <div className="mb-4 rounded-md bg-green-100 p-3 text-green-800">{ia_success}</div>}
+
+            {isDashboardVisible && (
+                <div className="mb-6">
+                    {/* <-- ATUALIZADO: Passa as novas propriedades para o componente do Dashboard --> */}
+                    <DashboardTurmaEspecifica
+                        analiseTurma={analise_turma}
+                        error={error_analise}
+                        turmaId={turma.id}
+                        periodos={periodos}
+                        activePeriodoId={active_periodo_id}
+                    />
                 </div>
-                <div className="mt-4 space-x-2 sm:mt-0 sm:ml-16 sm:flex-none">
-                    {/* A melhor forma é usar o componente Button e o atributo 'asChild' para links */}
-                    <Button variant="outline" asChild>
-                        <Link href={route('turmas.index')}>Voltar</Link>
-                    </Button>
-                    <Button variant="destructive" onClick={() => setIsDeleteAvaliacaoModalOpen(true)}>
-                        Deletar Avaliação
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsAvaliacaoModalOpen(true)}>
-                        Criar Avaliação
-                    </Button>
-                    <Button onClick={handleOpenCreateAlunoModal}>Novo Aluno</Button>
-                </div>
-            </div>
+            )}
 
             <DataTable<Aluno>
                 columns={columns}
@@ -89,9 +106,7 @@ export default function Show() {
             />
 
             <AlunoFormModal isOpen={isAlunoModalOpen} onClose={handleCloseAlunoModal} aluno={alunoToEdit} turmaId={turma.id} />
-
             <AvaliacaoFormModal isOpen={isAvaliacaoModalOpen} onClose={() => setIsAvaliacaoModalOpen(false)} turmaId={turma.id} materias={materias} />
-
             <DeleteAvaliacaoModal
                 isOpen={isDeleteAvaliacaoModalOpen}
                 onClose={() => setIsDeleteAvaliacaoModalOpen(false)}

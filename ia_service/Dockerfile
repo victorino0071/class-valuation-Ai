@@ -2,10 +2,10 @@
 
 # 1. Usar uma imagem base oficial do Python.
 # A versão 'slim' é mais leve, o que é ótimo para produção.
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 # 2. Definir o diretório de trabalho dentro do contêiner.
-# Todos os comandos a seguir serão executados a partir deste diretório.
+# Todos os comandos a seguir serão executados a partir deste diretório.sail
 WORKDIR /app
 
 # 3. Copiar o arquivo de dependências para o contêiner.
@@ -26,4 +26,4 @@ EXPOSE 8000
 # 'main:app' -> no arquivo 'main.py', encontre o objeto 'app'.
 # '--host 0.0.0.0' -> torna o serviço acessível de fora do contêiner.
 # '--port 8000' -> porta onde o serviço irá escutar.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
