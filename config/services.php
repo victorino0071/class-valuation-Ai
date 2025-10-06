@@ -13,6 +13,10 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'gemini' => [
+        'api_key' => env('GOOGLE_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'), // Define um valor padrão caso a variável não exista no .env
+    ],
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),

@@ -117,7 +117,7 @@ class IaServiceController extends Controller
 
             // ETAPA 4: CHAMAR A API DO GEMINI E TRATAR A RESPOSTA
             $client = Gemini::client(env('GOOGLE_API_KEY'));
-            $modelName = 'gemini-2.5-flash';
+            $modelName = config('services.gemini.model');
             $model = $client->generativeModel($modelName);
             $geminiReply = $model->generateContent($prompt);
             $geminiResponseText = $geminiReply->text();
@@ -391,7 +391,7 @@ class IaServiceController extends Controller
 
         // 5. CHAMADA À IA E TRATAMENTO DA RESPOSTA (código inalterado)
         $client = Gemini::client(env('GOOGLE_API_KEY'));
-        $modelName = 'gemini-2.5-flash';
+        $modelName = config('services.gemini.model');
         $model = $client->generativeModel($modelName);
         $geminiReply = $model->generateContent($prompt);
         $geminiResponseText = $geminiReply->text();
@@ -522,7 +522,7 @@ class IaServiceController extends Controller
 
         // 4. CHAMAR A IA E PROCESSAR A RESPOSTA (código inalterado, exceto pelo nome do modelo)
         $client = Gemini::client(env('GOOGLE_API_KEY'));
-        $modelName = 'gemini-2.5-flash';
+        $modelName = config('services.gemini.model');
         $geminiReply = $client->generativeModel($modelName)->generateContent($prompt);
         $geminiResponseText = $geminiReply->text();
 
