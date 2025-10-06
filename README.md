@@ -53,8 +53,8 @@ Siga este guia passo a passo para configurar e executar o ambiente de desenvolvi
 Primeiro, clone este repositório para a sua máquina local.
 
 ```bash
-git clone [https://github.com/seu-usuario/seu-repositorio.git](https://github.com/seu-usuario/seu-repositorio.git)
-cd seu-repositorio
+gh repo clone victorino0071/class-valuation-Ai
+cd class-valuation-Ai
 ```
 
 ### **2. Configurar o Ficheiro de Ambiente**
