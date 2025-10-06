@@ -18,7 +18,7 @@ class Relatorio extends Model
     protected $fillable = [
         'aluno_id',
         'texto',
-        'bimestre',
+        'periodo_id',
     ];
 
     /**
@@ -26,9 +26,6 @@ class Relatorio extends Model
      *
      * @var array<string, string>
      */
-    protected $casts = [
-        'bimestre' => 'integer',
-    ];
 
     /**
      * Define a relação de que um relatório pertence a um aluno.
@@ -36,5 +33,10 @@ class Relatorio extends Model
     public function aluno(): BelongsTo
     {
         return $this->belongsTo(Aluno::class);
+    }
+
+    public function periodo(): BelongsTo
+    {
+        return $this->belongsTo(Periodo::class);
     }
 }

@@ -8,7 +8,7 @@ class Avaliacao extends Model
 {
     protected $table = 'avaliacoes';
 
-    protected $fillable = ['nota', 'data_avaliacao', 'aluno_id', 'materia_id', 'turma_id'];
+    protected $fillable = ['nota', 'data_avaliacao', 'aluno_id', 'materia_id', 'turma_id', 'periodo_id'];
 
     public function aluno()
     {
@@ -23,5 +23,10 @@ class Avaliacao extends Model
     public function turma()
     {
         return $this->belongsTo(Turma::class);
+    }
+
+    public function periodo()
+    {
+        return $this->belongsTo(Periodo::class);
     }
 }

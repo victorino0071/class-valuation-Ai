@@ -139,3 +139,37 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Adicione este código ao seu CSS principal */
+
+:root {
+    --color-stroke: var(--chart-1); /* Usa a cor do seu tema para a linha */
+    --color-fill: oklch(from var(--chart-1) l c h / 0.4); /* Usa a mesma cor com 40% de opacidade para o preenchimento */
+
+    /* Cores para o Gráfico de Pizza (Desempenho) */
+    --color-aprovados: hsl(142.1 76.2% 36.3%); /* Verde */
+    --color-reprovados: hsl(0 84.2% 60.2%); /* Vermelho */
+
+    /* Paleta de Cores Azul para o Gráfico de Barras (Matérias) */
+    --chart-1: hsl(221.2 83.2% 53.3%); /* Azul Principal */
+    --chart-2: hsl(215.4 78.7% 63.7%);
+    --chart-3: hsl(210 79.7% 72.5%);
+    --chart-4: hsl(205.1 82.9% 81.2%);
+    --chart-5: hsl(199.2 88.6% 89.2%);
+}
+
+.dark {
+    --color-stroke: var(--chart-1); /* Usa a cor do seu tema (modo escuro) para a linha */
+    --color-fill: oklch(from var(--chart-1) l c h / 0.4); /* Usa a mesma cor (modo escuro) com 40% de opacidade */
+
+    /* Cores para o Gráfico de Pizza (Desempenho) - MODO ESCURO */
+    --color-aprovados: hsl(142.1 70.6% 45.3%); /* Verde */
+    --color-reprovados: hsl(0 72.2% 50.6%); /* Vermelho */
+    
+    /* Paleta de Cores Azul para o Gráfico de Barras (Matérias) - MODO ESCURO */
+    --chart-1: hsl(217.2 91.2% 59.8%); /* Azul Principal */
+    --chart-2: hsl(216.3 89.5% 68.2%);
+    --chart-3: hsl(213.7 91.3% 75.3%);
+    --chart-4: hsl(210.4 93.1% 82.4%);
+    --chart-5: hsl(206.1 95.8% 89.4%);
+}
